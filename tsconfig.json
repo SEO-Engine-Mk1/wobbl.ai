@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,
+    "skipLibCheck": false,
+    "strict": true,
+    "noEmit": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./frontend/src/*"],
+      "@/components/*": ["./frontend/src/components/*"],
+      "@/lib/*": ["./frontend/src/lib/*"],
+      "@/app/*": ["./frontend/src/app/*"],
+      "@/hooks/*": ["./frontend/src/hooks/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "*.ts", "*.tsx", "frontend/src/**/*.ts", "frontend/src/**/*.tsx"],
+  "exclude": ["node_modules", ".next", "frontend/.next", "frontend/out", "backend/dist", "backend/node_modules"]
+}

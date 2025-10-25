@@ -1,0 +1,201 @@
+// This is a basic Prisma schema for development
+// In production, this should be replaced with your actual schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Basic models for development
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  bio       String?
+  experience String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  articles  Article[]
+}
+
+model Article {
+  id                    String   @id @default(cuid())
+  title                 String
+  slug                  String   @unique
+  content               String?
+  excerpt               String?
+  metaDescription       String?
+  focusKeyword          String?
+  targetWordCount       Int?
+  actualWordCount       Int?
+  authorId              String?
+  authorName            String?
+  authorBio             String?
+  authorExperience      String?
+  experienceAnchor      String?
+  sourceDiversity       Int?
+  helpfulnessScore      Float?
+  freshnessScore        Float?
+  originalityScore      Float?
+  qaPassed              Boolean?
+  plagiarismChecked     Boolean  @default(false)
+  autoRefreshEnabled    Boolean  @default(false)
+  jsonLd                Json?
+  tableOfContents       Json?
+  faqSection            Json?
+  status                String   @default("draft")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  author                User?    @relation(fields: [authorId], references: [id])
+  serpAnalysis          SerpAnalysis?
+  claims                Claim[]
+  cost                  ArticleCost?
+  performanceMetrics    PerformanceMetric[]
+  emailCampaigns        EmailCampaign[]
+  refreshBriefs         RefreshBrief[]
+  internalLinks         InternalLink[]
+  competitorGaps        CompetitorGap[]
+  entityCoverage        EntityCoverage[]
+  authorProfile         AuthorProfile?
+}
+
+model SerpAnalysis {
+  id          String   @id @default(cuid())
+  articleId   String   @unique
+  query       String
+  topResults  Json
+  headings    Json?
+  entities    Json?
+  paas        Json?
+  gaps        Json?
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}
+
+model Claim {
+  id          String   @id @default(cuid())
+  articleId   String
+  claimText   String
+  claimType   String
+  sourceUrl   String?
+  confidence  Float?
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}
+
+model ArticleCost {
+  id              String   @id @default(cuid())
+  articleId       String   @unique
+  aiCost          Float    @default(0)
+  plagiarismCost  Float    @default(0)
+  smtpCost        Float    @default(0)
+  totalCost       Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  article         Article  @relation(fields: [articleId], references: [id])
+}
+
+model PerformanceMetric {
+  id          String   @id @default(cuid())
+  articleId   String
+  date        DateTime
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  position    Float?
+  ctr         Float?
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}
+
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  articleId   String
+  name        String
+  subject     String
+  sentAt      DateTime?
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+  events      EmailEvent[]
+}
+
+model EmailEvent {
+  id          String   @id @default(cuid())
+  campaignId  String
+  eventType   String   // sent, opened, clicked, bounced
+  timestamp   DateTime @default(now())
+  email       String?
+  
+  campaign    EmailCampaign @relation(fields: [campaignId], references: [id])
+}
+
+model RefreshBrief {
+  id          String   @id @default(cuid())
+  articleId   String
+  briefType   String   // content_decay, ranking_opportunity, etc.
+  message     String
+  priority    String   @default("medium")
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}
+
+model InternalLink {
+  id              String   @id @default(cuid())
+  articleId       String
+  anchor          String
+  targetUrl       String
+  confidence      Float
+  relevanceScore  Float
+  createdAt       DateTime @default(now())
+  
+  article         Article  @relation(fields: [articleId], references: [id])
+}
+
+model CompetitorGap {
+  id          String   @id @default(cuid())
+  articleId   String
+  gapType     String
+  description String
+  priority    String   @default("medium")
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}
+
+model EntityCoverage {
+  id                String   @id @default(cuid())
+  articleId         String
+  entity            String
+  entityType        String
+  covered           Boolean  @default(false)
+  coverageScore     Float?
+  frequency         Int?
+  prominence        String?
+  createdAt         DateTime @default(now())
+  
+  article           Article  @relation(fields: [articleId], references: [id])
+}
+
+model AuthorProfile {
+  id          String   @id @default(cuid())
+  articleId   String   @unique
+  expertise   Json?
+  credentials Json?
+  experience  Json?
+  createdAt   DateTime @default(now())
+  
+  article     Article  @relation(fields: [articleId], references: [id])
+}

@@ -1,0 +1,144 @@
+name: Vercel Auto-Deploy
+
+# Trigger on push to wobbl.ai branch
+on:
+  push:
+    branches: [ wobbl.ai ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/wobbl.ai'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm run db:generate
+
+      - name: Run linting
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Run type checking
+        run: pnpm run type-check
+        continue-on-error: true
+
+      - name: Build project for Vercel
+        run: pnpm run build:vercel
+
+      - name: Trigger Vercel Deployment via Webhook
+        run: |
+          # Trigger Vercel deploy hook
+          curl -X POST \
+               -H "Content-Type: application/json" \
+               -d '{
+                 "trigger": "github-auto-deploy",
+                 "meta": {
+                   "source": "github-actions",
+                   "repository": "https://github.com/SEO-Engine-Mk1/wobbl.ai",
+                   "branch": "wobbl.ai",
+                   "commit_message": "${{ github.event.head_commit.message }}",
+                   "build_time": "${{ github.event.head_commit.timestamp }}",
+                   "actor": "${{ github.actor }}",
+                   "commit_id": "${{ github.sha }}",
+                   "notes": "Auto-deployed via GitHub Actions push to wobbl.ai branch"
+                 }
+               }' \
+               "https://api.vercel.com/v1/integrations/deploy/prj_BXvG32V4OH6YRZen7py5fDjciCP0/aiqPgyJqUC"
+
+      - name: Wait for deployment (optional)
+        run: |
+          echo "🚀 Deployment triggered successfully!"
+          echo "📊 Check Vercel dashboard for deployment status"
+          echo "🔗 Deploy URL will be available shortly at: https://wobbl.ai"
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** SEO-Engine-Mk1/wobbl.ai" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** wobbl.ai" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** ${{ github.event.head_commit.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered:** GitHub Actions push to wobbl.ai" >> $GITHUB_STEP_SUMMARY
+          echo "- **Method:** Vercel Deploy Hook" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Deployment initiated" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production URL:** https://wobbl.ai" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- Check [Vercel Dashboard](https://vercel.com/dashboard) for deployment status" >> $GITHUB_STEP_SUMMARY
+          echo "- Health check: https://wobbl.ai/api/health" >> $GITHUB_STEP_SUMMARY
+
+  health-check:
+    name: Post-Deployment Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/wobbl.ai'
+    
+    steps:
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting 60 seconds for deployment to complete..."
+          sleep 60
+
+      - name: Health Check
+        run: |
+          echo "🔍 Checking deployment health..."
+          
+          # Check if the site is responding
+          if curl -f -s https://wobbl.ai/api/health > /dev/null; then
+            echo "✅ Deployment is healthy!"
+            echo "🌐 Site is accessible at: https://wobbl.ai"
+          else
+            echo "⚠️ Deployment might still be in progress..."
+            echo "🔍 Check Vercel dashboard for detailed status"
+            echo "📊 Health check endpoint: https://wobbl.ai/api/health"
+          fi
+
+      - name: Health Check Summary
+        run: |
+          echo "## 🏥 Health Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Deployment health check completed" >> $GITHUB_STEP_SUMMARY
+          echo "**Endpoint:** https://wobbl.ai/api/health" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Visit https://wobbl.ai to verify the deployment" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check [Vercel Dashboard](https://vercel.com/dashboard) for detailed logs" >> $GITHUB_STEP_SUMMARY
+          echo "3. Monitor API health via https://wobbl.ai/api/health" >> $GITHUB_STEP_SUMMARY

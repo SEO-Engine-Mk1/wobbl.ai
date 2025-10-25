@@ -1,0 +1,52 @@
+export default [
+  {
+    files: ['**/*.{js,cjs,mjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+        global: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+      },
+    },
+    rules: {
+      // Basic rules for JavaScript files
+      'no-unused-vars': 'off',
+      'no-console': 'off',
+      'no-debugger': 'off',
+      'no-empty': 'off',
+      'no-undef': 'off',
+    },
+  },
+  {
+    ignores: [
+      'dist/**',
+      'build/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.ts',
+      'coverage/**',
+      '.nyc_output/**',
+      '.vscode/**',
+      '.idea/**',
+      '.next/**',
+      'out/**',
+      'public/**',
+      'frontend/**',
+      'backend/**',
+      'docs/**',
+    ],
+  },
+];

@@ -1,0 +1,534 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  role          String   @default("user")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  articles      Article[]
+  wpConnections WPConnection[]
+  emailCampaigns EmailCampaign[]
+  companyProfiles CompanyProfile[]
+}
+
+model Article {
+  id                    String   @id @default(cuid())
+  title                 String
+  slug                  String   @unique
+  content               String
+  excerpt               String?
+  metaDescription       String?
+  canonicalUrl          String?
+  focusKeyword          String?
+  targetWordCount       Int      @default(2500)
+  actualWordCount       Int?
+  keywords              String   // Array of keywords as JSON string
+  readingTime           Int?     // Reading time in minutes
+  seoScore              Int?     // SEO score 0-100
+  wordpressPostId       Int?     // WordPress post ID
+  wordpressUrl          String?  // WordPress post URL
+  wordpressStatus       String?  // WordPress post status
+  publishedAt           DateTime?
+  
+  // E-E-A-T fields
+  authorId              String?
+  authorName            String
+  authorBio             String?
+  authorExperience      String?
+  experienceAnchor      String?
+  sourceDiversity       Int      @default(0)
+  helpfulnessScore      Float?
+  freshnessScore        Float?
+  
+  // QA fields
+  originalityScore      Float?
+  plagiarismChecked     Boolean  @default(false)
+  claimsVerified        Boolean  @default(false)
+  seoChecked            Boolean  @default(false)
+  serpCoverageChecked   Boolean  @default(false)
+  qaPassed              Boolean  @default(false)
+  
+  // Publishing
+  status                String   @default("draft") // draft, reviewing, approved, published
+  
+  // Performance tracking
+  jsonLd                String?
+  tableOfContents       String?
+  faqSection            String?
+  
+  // New feature fields
+  entityCoverageScore   Float?   // Entity density & topical relevance
+  autoRefreshEnabled    Boolean  @default(false) // Scheduled auto-refresh
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  author                User?    @relation(fields: [authorId], references: [id])
+  authorProfile         Author?  @relation(fields: [authorName], references: [name])
+  claims                Claim[]
+  socialPosts           SocialPost[]
+  serpAnalysis          SerpAnalysis?
+  refreshBriefs         RefreshBrief[]
+  performanceMetrics    ArticlePerformance[]
+  internalLinks         InternalLinkSuggestion[]
+  competitorGaps        CompetitorGap[]
+  entityCoverage        EntityCoverage[]
+  cost                  ArticleCost?
+  
+  @@map("articles")
+}
+
+model Claim {
+  id              String   @id @default(cuid())
+  articleId       String
+  claimText       String
+  claimType       String   // statistic, fact, entity, quote
+  sourceUrl       String?
+  confidence      Float?
+  verified        Boolean  @default(false)
+  verificationNotes String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("claims")
+}
+
+model SerpAnalysis {
+  id              String   @id @default(cuid())
+  articleId       String   @unique
+  query           String
+  topResults      String   // SERP top 10 results as JSON string
+  headings        String?  // Extracted headings as JSON string
+  entities        String?  // Named entities as JSON string
+  paas            String?  // People Also Ask questions as JSON string
+  gaps            String?  // Content gaps identified as JSON string
+  createdAt       DateTime @default(now())
+  
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("serp_analyses")
+}
+
+model WPConnection {
+  id              String   @id @default(cuid())
+  userId          String
+  siteUrl         String
+  username        String
+  applicationPassword String // encrypted
+  isActive        Boolean  @default(true)
+  lastSyncAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@map("wp_connections")
+}
+
+model SocialPost {
+  id              String   @id @default(cuid())
+  articleId       String
+  platform        String   // linkedin, twitter, facebook
+  content         String
+  status          String   @default("draft") // draft, scheduled, posted, failed
+  scheduledAt     DateTime?
+  postedAt        DateTime?
+  platformPostId  String?
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("social_posts")
+}
+
+model CompanyProfile {
+  id              String   @id @default(cuid())
+  userId          String
+  companyName     String
+  industry        String
+  geo             String?
+  competitors     String?
+  cta             String?
+  signature       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id])
+  emailCampaigns  EmailCampaign[]
+  attachments     Attachment[]
+  
+  @@map("company_profiles")
+}
+
+model Attachment {
+  id              String   @id @default(cuid())
+  companyProfileId String
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int
+  path            String
+  createdAt       DateTime @default(now())
+  
+  companyProfile  CompanyProfile @relation(fields: [companyProfileId], references: [id], onDelete: Cascade)
+  
+  @@map("attachments")
+}
+
+
+model EmailStep {
+  id              String   @id @default(cuid())
+  campaignId      String
+  stepNumber      Int
+  subject         String
+  content         String
+  delayDays       Int
+  delayHours      Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  campaign        EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  events          EmailEvent[]
+  
+  @@map("email_steps")
+}
+
+model EmailEvent {
+  id              String   @id @default(cuid())
+  campaignId      String
+  stepId          String?
+  recipientEmail  String
+  eventType       String   // sent, opened, clicked, replied, bounced, unsubscribed
+  eventData       String?
+  timestamp       DateTime @default(now())
+  
+  campaign        EmailCampaign @relation(fields: [campaignId], references: [id])
+  step            EmailStep? @relation(fields: [stepId], references: [id])
+  
+  @@map("email_events")
+}
+
+model SearchConsoleProperty {
+  id              String   @id @default(cuid())
+  userId          String
+  siteUrl         String
+  propertyId      String
+  accessToken     String   // encrypted
+  refreshToken    String   // encrypted
+  isActive        Boolean  @default(true)
+  lastSyncAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  metricSnapshots GSCMetricSnapshot[]
+  
+  @@map("search_console_properties")
+}
+
+model GSCMetricSnapshot {
+  id              String   @id @default(cuid())
+  propertyId      String
+  page            String
+  query           String?
+  date            DateTime
+  impressions     Int
+  clicks          Int
+  ctr             Float
+  position        Float
+  createdAt       DateTime @default(now())
+  
+  property        SearchConsoleProperty @relation(fields: [propertyId], references: [id])
+  performance     ArticlePerformance?
+  
+  @@unique([propertyId, page, query, date])
+  @@map("gsc_metric_snapshots")
+}
+
+model ArticlePerformance {
+  id              String   @id @default(cuid())
+  articleId       String
+  gscSnapshotId   String?  @unique
+  date            DateTime
+  impressions     Int
+  clicks          Int
+  ctr             Float
+  position        Float
+  deltaImpressions Float?
+  deltaClicks     Float?
+  deltaCtr        Float?
+  deltaPosition   Float?
+  createdAt       DateTime @default(now())
+  
+  article         Article  @relation(fields: [articleId], references: [id])
+  gscSnapshot     GSCMetricSnapshot? @relation(fields: [gscSnapshotId], references: [id])
+  
+  @@unique([articleId, date])
+  @@map("article_performance")
+}
+
+model RefreshBrief {
+  id              String   @id @default(cuid())
+  articleId       String
+  briefType       String   // decay, opportunity, audit
+  priority        String   // low, medium, high
+  tasks           String   // Array of tasks to complete as JSON string
+  status          String   @default("pending") // pending, approved, applied
+  generatedAt     DateTime @default(now())
+  appliedAt       DateTime?
+  
+  article         Article  @relation(fields: [articleId], references: [id])
+  
+  @@map("refresh_briefs")
+}
+
+model TechAuditIssue {
+  id              String   @id @default(cuid())
+  articleId       String?
+  page            String
+  issueType       String   // indexability, canonical, schema, broken_link, sitemap
+  severity        String   // low, medium, high
+  description     String
+  recommendation  String
+  status          String   @default("open") // open, resolved, ignored
+  discoveredAt    DateTime @default(now())
+  resolvedAt      DateTime?
+  
+  @@map("tech_audit_issues")
+}
+
+// NEW FEATURE MODELS
+
+// 1. Internal Linking Intelligence Engine
+model InternalLinkSuggestion {
+  id         String   @id @default(cuid())
+  articleId  String
+  anchor     String
+  targetUrl  String
+  confidence Float
+  accepted   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("internal_link_suggestions")
+}
+
+// 3. Competitor Gap Mapping
+model CompetitorGap {
+  id         String   @id @default(cuid())
+  articleId  String
+  entity     String
+  sourceUrl  String?
+  gapType    String   // missing_entity, missing_subtopic, weak_coverage
+  priority   String   @default("medium") // low, medium, high
+  createdAt  DateTime @default(now())
+  
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("competitor_gaps")
+}
+
+// 4. Entity Density & Topical Relevance Scoring
+model EntityCoverage {
+  id            String   @id @default(cuid())
+  articleId     String
+  entity        String
+  entityType    String   // person, organization, location, concept, product
+  covered       Boolean  @default(false)
+  coverageScore Float    @default(0)
+  frequency     Int      @default(0)
+  prominence    Float    @default(0) // Position/importance in text
+  createdAt     DateTime @default(now())
+  
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@unique([articleId, entity])
+  @@map("entity_coverage")
+}
+
+// 6. Content Cost vs ROI Dashboard
+model ArticleCost {
+  id              String   @id @default(cuid())
+  articleId       String   @unique
+  aiCost          Float    @default(0)
+  smtpCost        Float    @default(0)
+  plagiarismCost  Float    @default(0)
+  totalCost       Float    @default(0)
+  clicksGained    Int      @default(0)
+  cpcValue        Float    @default(0)
+  roi             Float?   // Return on investment percentage
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  @@map("article_costs")
+}
+
+// 7. Author Reputation Tracking
+model Author {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  bio            String?
+  credentials    String?
+  topics         String?  // Array of expertise topics as JSON string
+  totalArticles  Int      @default(0)
+  avgOriginality Float    @default(0)
+  avgPosition    Float    @default(0)
+  totalClicks    Int      @default(0)
+  avgCpcValue    Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  articles       Article[]
+  
+  @@map("authors")
+}
+
+// Email Service Models
+model EmailTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  subject       String
+  htmlContent   String
+  textContent   String
+  variables     String   // Array of variable names as JSON string
+  category      String   // welcome, newsletter, promotion, notification, custom
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  campaigns     EmailCampaign[]
+  
+  @@map("email_templates")
+}
+
+model EmailList {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  subscribers EmailListSubscriber[]
+  campaigns   EmailCampaign[]
+  
+  @@map("email_lists")
+}
+
+model EmailSubscriber {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  firstName     String?
+  lastName      String?
+  customFields  String?  // Custom subscriber fields as JSON string
+  status        String   @default("active") // active, unsubscribed, bounced
+  subscribedAt  DateTime @default(now())
+  unsubscribedAt DateTime?
+  
+  lists         EmailListSubscriber[]
+  
+  @@map("email_subscribers")
+}
+
+model EmailListSubscriber {
+  id           String   @id @default(cuid())
+  listId       String
+  subscriberId String
+  addedAt      DateTime @default(now())
+  
+  list         EmailList     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  subscriber   EmailSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  @@unique([listId, subscriberId])
+  @@map("email_list_subscribers")
+}
+
+model ScheduledPost {
+  id            String   @id @default(cuid())
+  content       String
+  imageUrl      String?
+  link          String?
+  hashtags      String   // Array of hashtags as JSON string
+  platforms     String   // Array of platform names as JSON string
+  scheduledAt   DateTime
+  status        String   @default("scheduled") // scheduled, published, failed
+  publishedAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("scheduled_posts")
+}
+
+model EmailSendResult {
+  id          String   @id @default(cuid())
+  messageId   String
+  campaignId  String
+  email       String
+  status      String   // sent, failed, bounced
+  error       String?
+  timestamp   DateTime @default(now())
+  
+  campaign    EmailCampaign @relation(fields: [campaignId], references: [id])
+  
+  @@map("email_send_results")
+}
+
+// Update EmailCampaign to include new relationships
+model EmailCampaign {
+  id              String   @id @default(cuid())
+  userId          String
+  companyProfileId String?
+  templateId      String?
+  listIds        String   // Array of list IDs as JSON string
+  name            String
+  description     String
+  subjectTemplate String?
+  status          String   @default("draft") // draft, scheduled, running, completed, paused
+  scheduleType    String   @default("immediate") // immediate, scheduled, recurring
+  scheduledAt     DateTime?
+  recurringConfig String?  // Recurring schedule configuration as JSON string
+  dailyCap        Int      @default(100)
+  warmupDay       Int      @default(1)
+  totalSent       Int      @default(0)
+  totalOpened     Int      @default(0)
+  totalClicked    Int      @default(0)
+  totalReplied    Int      @default(0)
+  totalUnsubscribed Int    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id])
+  companyProfile  CompanyProfile? @relation(fields: [companyProfileId], references: [id])
+  template        EmailTemplate? @relation(fields: [templateId], references: [id])
+  lists           EmailList[]
+  emailSteps      EmailStep[]
+  events          EmailEvent[]
+  sendResults     EmailSendResult[]
+  
+  @@map("email_campaigns")
+}

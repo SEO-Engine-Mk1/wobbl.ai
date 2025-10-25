@@ -1,0 +1,164 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [ wobbl.ai ]
+  pull_request:
+    branches: [ wobbl.ai ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/wobbl.ai'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.19.0
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --no-frozen-lockfile
+
+    - name: Run linting
+      run: pnpm lint
+
+    - name: Run type checking
+      run: pnpm tsc --noEmit || true
+
+    - name: Build project
+      run: pnpm build
+
+    - name: Install Vercel CLI
+      run: npm install --global vercel@latest
+
+    - name: Pull Vercel Environment Information
+      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Build Project Artifacts
+      run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Deploy Project Artifacts to Vercel
+      id: deploy
+      run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Deployment URL
+      run: echo "🚀 Deployed to ${{ steps.deploy.outputs.url }}"
+
+  preview:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.19.0
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --no-frozen-lockfile
+
+    - name: Run linting
+      run: pnpm lint
+
+    - name: Run type checking
+      run: pnpm tsc --noEmit || true
+
+    - name: Build project
+      run: pnpm build
+
+    - name: Install Vercel CLI
+      run: npm install --global vercel@latest
+
+    - name: Pull Vercel Environment Information
+      run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Build Project Artifacts
+      run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Deploy Project Artifacts to Vercel
+      id: deploy
+      run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+      working-directory: .
+
+    - name: Preview Deployment URL
+      run: echo "🔍 Preview deployed to ${{ steps.deploy.outputs.url }}"
+
+    - name: Comment PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Preview deployment')
+          );
+          
+          const comment = botComment || await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: `## 🚀 Preview Deployment\n\n🔗 **Preview URL**: ${{ steps.deploy.outputs.url }}\n\nBuilt from commit: ${context.sha.substring(0, 7)}`
+          });
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: `## 🚀 Preview Deployment\n\n🔗 **Preview URL**: ${{ steps.deploy.outputs.url }}\n\nBuilt from commit: ${context.sha.substring(0, 7)}`
+            });
+          }

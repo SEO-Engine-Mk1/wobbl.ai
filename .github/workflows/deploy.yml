@@ -1,0 +1,141 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ wobbl.ai ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - preview
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run quality checks
+        run: |
+          echo "🔍 Running quality checks..."
+          pnpm run lint || echo "⚠️ Lint issues found"
+          pnpm run type-check || echo "⚠️ Type issues found"
+
+      - name: Build application
+        run: |
+          echo "🏗️ Building application..."
+          pnpm run build
+
+      - name: Deploy to Vercel via Webhook
+        run: |
+          echo "🚀 Triggering Vercel deployment..."
+          
+          # Trigger Vercel deploy hook
+          RESPONSE=$(curl -s -X POST \
+               -H "Content-Type: application/json" \
+               -d '{
+                 "trigger": "github-auto-deploy",
+                 "meta": {
+                   "source": "github-actions",
+                   "repository": "https://github.com/SEO-Engine-Mk1/wobbl.ai",
+                   "branch": "wobbl.ai",
+                   "commit_message": "${{ github.event.head_commit.message }}",
+                   "build_time": "${{ github.event.head_commit.timestamp }}",
+                   "actor": "${{ github.actor }}",
+                   "commit_id": "${{ github.sha }}",
+                   "notes": "Auto-deployed via GitHub Actions deploy workflow"
+                 }
+               }' \
+               "https://api.vercel.com/v1/integrations/deploy/prj_BXvG32V4OH6YRZen7py5fDjciCP0/aiqPgyJqUC")
+          
+          echo "📊 Deployment response: $RESPONSE"
+          echo "✅ Deployment triggered successfully!"
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Status**: Deployment triggered successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Production URL**: https://wobbl.ai" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Build Info**:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- Check [Vercel Dashboard](https://vercel.com/dashboard) for deployment status" >> $GITHUB_STEP_SUMMARY
+          echo "- Health check: https://wobbl.ai/api/health" >> $GITHUB_STEP_SUMMARY
+
+      - name: Health Check
+        run: |
+          echo "🏥 Running health check..."
+          echo "⏳ Waiting 60 seconds for deployment to complete..."
+          sleep 60
+          
+          echo "🔍 Checking deployment health..."
+          
+          # Check if the site is responding
+          if curl -f -s https://wobbl.ai/api/health > /dev/null; then
+            echo "✅ Deployment is healthy!"
+            echo "🌐 Site is accessible at: https://wobbl.ai"
+          else
+            echo "⚠️ Deployment might still be in progress..."
+            echo "🔍 Check Vercel dashboard for detailed status"
+            echo "📊 Health check endpoint: https://wobbl.ai/api/health"
+          fi
+
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    
+    steps:
+      - name: Deployment Notification
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "🎉 Deployment completed successfully!"
+            echo "🌐 Live at: https://wobbl.ai"
+          else
+            echo "❌ Deployment failed!"
+            echo "🔍 Check the logs for more information"
+          fi

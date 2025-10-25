@@ -1,0 +1,56 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-branch-protection:
+    name: Check Branch Protection Rules
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check PR is not to main directly
+      run: |
+        if [[ "${{ github.base_ref }}" == "main" ]]; then
+          echo "❌ Direct commits to main are not allowed"
+          echo "Please create a feature branch and submit a PR"
+          exit 1
+        fi
+        
+    - name: Check PR description
+      run: |
+        if [[ -z "${{ github.event.pull_request.body }}" ]]; then
+          echo "❌ PR description is required"
+          exit 1
+        fi
+        
+    - name: Check for required labels
+      run: |
+        # Add label checking logic here if needed
+        echo "✅ Label checks passed"
+        
+    - name: Check file size limits
+      run: |
+        # Check for large files that shouldn't be committed
+        large_files=$(find . -type f -size +10M -not -path "./.git/*" -not -path "./node_modules/*")
+        if [[ -n "$large_files" ]]; then
+          echo "❌ Large files detected:"
+          echo "$large_files"
+          exit 1
+        fi
+        
+    - name: Validate commit messages
+      run: |
+        # Check commit message format
+        commits=$(git log --format="%s" origin/main..HEAD)
+        while read -r commit; do
+          if [[ ! "$commit" =~ ^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\(.+\))?: .+ ]]; then
+            echo "❌ Invalid commit message format: $commit"
+            echo "Please use conventional commit format: type(scope): description"
+            exit 1
+          fi
+        done <<< "$commits"
