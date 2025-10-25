@@ -85,7 +85,7 @@
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/react-query": "^5.62.3",
     "@types/node": "^20.17.6",
-    "@vercel/node": "^3.2.24",
+    "@vercel/node": "^5.5.0",
     "@vitejs/plugin-react": "^4.3.3",
     "ai": "^5.0.76",
     "autoprefixer": "^10.4.20",
@@ -152,5 +152,11 @@
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "pnpm": {
+    "overrides": {
+      "semver": ">=7.5.2",
+      "path-to-regexp": ">=6.3.0"
+    }
+  }
 }
