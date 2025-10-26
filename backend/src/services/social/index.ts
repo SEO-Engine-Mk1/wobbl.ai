@@ -349,17 +349,17 @@ export class SocialMediaService {
 
   private async saveSocialPost(response: SocialMediaResponse, _post: SocialPost): Promise<void> {
     // TODO: Fix postId field - it doesn't exist in the Prisma schema, use platformPostId instead
+    // TODO: Need to get articleId from the post or context
     await prisma.socialPost.create({
       data: {
         platform: response.platform,
         platformPostId: response.postId, // Use platformPostId instead of postId
-        url: response.url,
         status: response.status,
         content: _post.content,
-        imageUrl: _post.imageUrl,
-        link: _post.link,
-        hashtags: _post.hashtags || [],
-        publishedAt: new Date(),
+        articleId: 'default-article-id', // TODO: Get actual articleId from context
+        // TODO: Add imageUrl, link fields to schema if needed
+        // imageUrl: _post.imageUrl,
+        // link: _post.link,
         createdAt: new Date(),
       }
     });

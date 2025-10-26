@@ -247,16 +247,24 @@ class RedisIntegration {
   }
 
   async zrange<T = any>(key: string, start: number, stop: number, options?: { rev?: boolean }): Promise<T[]> {
-    const args = options?.rev ? ['REV'] : [];
-    // TODO: Fix Redis zrange type issue - need proper typing for optional args
-    const members = await this.client.zrange(key, start, stop, ...args) as string[];
-    return members.map((m: string) => {
-      try {
-        return JSON.parse(m);
-      } catch {
-        return m as T;
+    try {
+      let members: string[];
+      if (options?.rev) {
+        members = await this.client.zrange(key, start, stop, 'REV') as string[];
+      } else {
+        members = await this.client.zrange(key, start, stop) as string[];
       }
-    });
+      return members.map((m: string) => {
+        try {
+          return JSON.parse(m);
+        } catch {
+          return m as T;
+        }
+      });
+    } catch (error) {
+      console.error('Redis zrange error:', error);
+      return [];
+    }
   }
 
   async zscore(key: string, member: any): Promise<number | null> {
