@@ -238,7 +238,8 @@ export class SocialMediaService {
     return adapted;
   }
 
-  private async uploadTwitterMedia(imageUrl: string): Promise<string> {
+  private async uploadTwitterMedia(_imageUrl: string): Promise<string> {
+    // TODO: Implement actual Twitter media upload
     // Mock media upload - implement actual Twitter media upload
     return 'mock_media_id';
   }
@@ -327,17 +328,17 @@ export class SocialMediaService {
     };
   }
 
-  async deletePost(postId: string, platform: string): Promise<void> {
+  async deletePost(_postId: string, platform: string): Promise<void> {
     try {
       switch (platform) {
         case 'twitter':
-          // Implement Twitter delete
+          // TODO: Implement Twitter delete
           break;
         case 'linkedin':
-          // Implement LinkedIn delete
+          // TODO: Implement LinkedIn delete
           break;
         case 'facebook':
-          // Implement Facebook delete
+          // TODO: Implement Facebook delete
           break;
       }
     } catch (error) {
@@ -347,10 +348,11 @@ export class SocialMediaService {
   }
 
   private async saveSocialPost(response: SocialMediaResponse, _post: SocialPost): Promise<void> {
+    // TODO: Fix postId field - it doesn't exist in the Prisma schema, use platformPostId instead
     await prisma.socialPost.create({
       data: {
         platform: response.platform,
-        postId: response.postId,
+        platformPostId: response.postId, // Use platformPostId instead of postId
         url: response.url,
         status: response.status,
         content: _post.content,

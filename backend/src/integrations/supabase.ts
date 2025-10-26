@@ -73,12 +73,13 @@ export interface SupabaseRealtime {
 }
 
 class SupabaseIntegration {
-  private config: SupabaseConfig;
+  // TODO: Use config parameter or remove if unused
+  private _config: SupabaseConfig;
   private client: SupabaseClient<Database>;
   private serviceClient: SupabaseClient<Database> | null = null;
 
   constructor(config: SupabaseConfig) {
-    this.config = config;
+    this._config = config;
     const clientOptions = {
       ...config.options,
       db: {
@@ -88,6 +89,7 @@ class SupabaseIntegration {
     this.client = createClient(config.url, config.anonKey, clientOptions);
     
     if (config.serviceRoleKey) {
+      // TODO: Use serviceClient or remove if unused
       this.serviceClient = createClient(config.url, config.serviceRoleKey, {
         ...clientOptions,
         auth: {

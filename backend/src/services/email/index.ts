@@ -140,6 +140,8 @@ export class EmailService {
       data: {
         ...campaign,
         listIds: Array.isArray(campaign.listIds) ? JSON.stringify(campaign.listIds) : campaign.listIds,
+        // TODO: Fix recurringConfig type - convert object to JSON string for database
+        recurringConfig: campaign.recurringConfig ? JSON.stringify(campaign.recurringConfig) : null,
         id: crypto.randomUUID(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -154,10 +156,11 @@ export class EmailService {
       listIds: JSON.parse(newCampaign.listIds),
       scheduleType: newCampaign.scheduleType as any,
       scheduledAt: newCampaign.scheduledAt || undefined,
-      recurringConfig: newCampaign.recurringConfig as any,
+      recurringConfig: newCampaign.recurringConfig ? JSON.parse(newCampaign.recurringConfig) : undefined,
       status: newCampaign.status as any,
       createdAt: newCampaign.createdAt,
       updatedAt: newCampaign.updatedAt,
+      userId: newCampaign.userId,
     };
   }
 

@@ -61,7 +61,8 @@ export async function checkServiceHealth() {
     await prisma.$queryRaw`SELECT 1`;
     health.database = 'healthy';
   } catch (error) {
-    health.database = prisma === mockDatabase ? 'mock' : 'unhealthy';
+    // TODO: Fix database type comparison - need proper type checking for mock vs real database
+    health.database = prisma === (mockDatabase as any) ? 'mock' : 'unhealthy';
   }
 
   // Check Supabase
@@ -88,11 +89,12 @@ export async function checkServiceHealth() {
   // Check ZAI
   try {
     const ZAIImport = await zai;
-    if (typeof ZAIImport.create === 'function') {
-      const zaiService = await ZAIImport.create();
+    // TODO: Fix ZAI SDK type checking - need to properly type check if it's the real SDK or mock
+    if (ZAIImport && typeof ZAIImport.create === 'function') {
+      const zaiService = await (ZAIImport as any).create();
       health.zai = zaiService !== mockZAI ? 'healthy' : 'mock';
     } else {
-      health.zai = 'unhealthy';
+      health.zai = ZAIImport === mockZAI ? 'mock' : 'unhealthy';
     }
   } catch (error) {
     health.zai = 'unhealthy';

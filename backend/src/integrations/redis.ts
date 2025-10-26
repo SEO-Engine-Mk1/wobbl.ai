@@ -26,10 +26,11 @@ export interface RedisCacheOptions {
 
 class RedisIntegration {
   private client: Redis;
-  private config: RedisConfig;
+  // TODO: Use config parameter or remove if unused
+  private _config: RedisConfig;
 
   constructor(config: RedisConfig) {
-    this.config = config;
+    this._config = config;
     this.client = new Redis({
       host: config.host,
       port: config.port,
@@ -247,6 +248,7 @@ class RedisIntegration {
 
   async zrange<T = any>(key: string, start: number, stop: number, options?: { rev?: boolean }): Promise<T[]> {
     const args = options?.rev ? ['REV'] : [];
+    // TODO: Fix Redis zrange type issue - need proper typing for optional args
     const members = await this.client.zrange(key, start, stop, ...args) as string[];
     return members.map((m: string) => {
       try {

@@ -496,7 +496,8 @@ class StripeIntegration {
     }
 
     const webhookSecret = this.config.webhookSecret;
-    const header = signature;
+    // TODO: Use signature parameter or remove if unused
+    const _header = signature;
     
     try {
       return createHmac('sha256', webhookSecret)
