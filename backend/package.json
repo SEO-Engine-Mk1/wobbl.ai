@@ -44,7 +44,8 @@
     "tsx": "^4.20.3",
     "turndown": "^7.2.1",
     "uuid": "^11.1.0",
-    "z-ai-web-dev-sdk": "^0.0.10"
+    "z-ai-web-dev-sdk": "^0.0.10",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",

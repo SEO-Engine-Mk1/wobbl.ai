@@ -3,22 +3,32 @@ import { prisma } from '@/lib/db'
 import { env } from '@/lib/env'
 import nodemailer from 'nodemailer'
 import ZAI from 'z-ai-web-dev-sdk'
+import { 
+  CreateCampaignRequestSchema,
+  EmailCampaignCreateSchema,
+  stringifyArray 
+} from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate request body
+    const body = await request.json()
+    const validationResult = CreateCampaignRequestSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json({ 
+        error: 'Invalid request data',
+        details: validationResult.error.issues 
+      }, { status: 400 })
+    }
+    
     const { 
       userId, 
       companyProfileId, 
       name, 
       recipientList, 
       campaignSettings 
-    } = await request.json()
-
-    if (!userId || !companyProfileId || !name || !recipientList) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: userId, companyProfileId, name, recipientList' 
-      }, { status: 400 })
-    }
+    } = validationResult.data
 
     // Get company profile
     const companyProfile = await prisma.companyProfile.findUnique({
@@ -44,15 +54,30 @@ export async function POST(request: NextRequest) {
       zai
     })
 
-    // Step 3: Create campaign record
+    // Step 3: Create campaign record with validation
+    const campaignData = {
+      userId,
+      companyProfileId,
+      name,
+      description: `AI-generated campaign for ${companyProfile.companyName}`,
+      listIds: stringifyArray(recipientList),
+      status: 'draft' as const,
+      scheduleType: 'immediate' as const,
+    }
+
+    const campaignValidation = EmailCampaignCreateSchema.safeParse(campaignData)
+    if (!campaignValidation.success) {
+      console.error('Campaign data validation failed:', campaignValidation.error.issues)
+      return NextResponse.json({ 
+        error: 'Campaign data is invalid',
+        details: campaignValidation.error.issues 
+      }, { status: 500 })
+    }
+
     const campaign = await prisma.emailCampaign.create({
       data: {
-        userId,
-        companyProfileId,
-        name,
+        ...campaignValidation.data,
         description: `Email campaign for ${companyProfile.companyName}`,
-        listIds: JSON.stringify([]), // Empty list for now
-        status: 'draft',
         dailyCap: campaignSettings?.dailyCap || 100,
         warmupDay: 1
       }

@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
+import { 
+  CreateArticleRequestSchema, 
+  ArticleCreateSchema,
+  stringifyArray 
+} from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, authorId, authorName, authorBio, authorExperience, experienceAnchor } = await request.json()
-
-    if (!query || !authorId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    // Validate request body
+    const body = await request.json()
+    const validationResult = CreateArticleRequestSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      return NextResponse.json({ 
+        error: 'Invalid request data',
+        details: validationResult.error.issues 
+      }, { status: 400 })
     }
+    
+    const { query, authorId, authorName, authorBio, authorExperience, experienceAnchor } = validationResult.data
 
     // Initialize ZAI SDK
     const zai = await ZAI.create()
@@ -37,30 +49,43 @@ export async function POST(request: NextRequest) {
       zai
     })
 
-    // Step 4: Create article record
+    // Step 4: Validate and create article record
+    const articleData = {
+      title: articleContent.title,
+      slug: generateSlug(articleContent.title),
+      content: articleContent.content,
+      excerpt: articleContent.excerpt,
+      metaDescription: articleContent.metaDescription,
+      focusKeyword: query,
+      targetWordCount: 2500,
+      actualWordCount: articleContent.wordCount,
+      keywords: stringifyArray([query, authorName].filter(Boolean)),
+      authorId,
+      authorName: authorName || 'Anonymous',
+      authorBio,
+      authorExperience,
+      experienceAnchor,
+      status: 'draft' as const,
+    }
+
+    const articleValidation = ArticleCreateSchema.safeParse(articleData)
+    if (!articleValidation.success) {
+      console.error('Generated article data validation failed:', articleValidation.error.issues)
+      return NextResponse.json({ 
+        error: 'Generated article data is invalid',
+        details: articleValidation.error.issues 
+      }, { status: 500 })
+    }
+
     const article = await prisma.article.create({
       data: {
-        title: articleContent.title,
-        slug: generateSlug(articleContent.title),
-        content: articleContent.content,
-        excerpt: articleContent.excerpt,
-        metaDescription: articleContent.metaDescription,
-        focusKeyword: query,
-        targetWordCount: 2500,
-        actualWordCount: articleContent.wordCount,
-        keywords: JSON.stringify([query, authorName].filter(Boolean)), // Add keywords field
-        authorId,
-        authorName,
-        authorBio,
-        authorExperience,
-        experienceAnchor,
-        sourceDiversity: serpAnalysis.uniqueDomains,
+        ...articleValidation.data,
+        sourceDiversity: serpAnalysis._uniqueDomains,
         helpfulnessScore: articleContent.helpfulnessScore,
         freshnessScore: articleContent.freshnessScore,
         jsonLd: articleContent.jsonLd,
         tableOfContents: articleContent.tableOfContents,
         faqSection: articleContent.faqSection,
-        status: 'draft'
       }
     })
 
