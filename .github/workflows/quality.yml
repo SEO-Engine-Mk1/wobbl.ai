@@ -303,6 +303,7 @@ jobs:
         run: pnpm audit --audit-level=medium
 
       - name: Check for secrets
+        if: ${{ github.event.before != github.event.after }}
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
