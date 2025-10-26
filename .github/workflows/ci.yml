@@ -55,7 +55,7 @@ jobs:
         run: pnpm audit --audit-level=high
 
       - name: Check for secrets
-        if: ${{ github.event_name == 'push' && github.event.before != github.event.after }}
+        if: ${{ github.event_name == 'push' && github.event.before != github.event.after && github.event.before != '0000000000000000000000000000000000000000' }}
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./

@@ -16,8 +16,11 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
-    "types": ["react", "react-dom"],
+    "jsx": "preserve",
+    "types": [
+      "react",
+      "react-dom"
+    ],
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
