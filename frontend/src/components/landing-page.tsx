@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Brain, Search, CheckCircle, Zap, Star, ArrowRight, Mail, Phone, MapPin, TrendingUp, Shield, Clock, Users, BarChart3, Globe, Lightbulb, Target, Rocket } from 'lucide-react'
+import { Brain, Search, CheckCircle, Zap, Star, ArrowRight, Mail, Phone, MapPin, TrendingUp, Shield, Users, BarChart3, Globe, Lightbulb, Target, Rocket } from 'lucide-react'
 import { useState } from 'react'
 
 export function LandingPage() {
