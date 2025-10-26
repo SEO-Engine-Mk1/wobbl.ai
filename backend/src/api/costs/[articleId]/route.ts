@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { articleId: string } }
 ) {
   try {
@@ -164,7 +164,7 @@ function calculatePlagiarismCosts(article: any) {
   return 0
 }
 
-async function calculateSMTPCosts(article: any) {
+async function calculateSMTPCosts(_article: any) {
   try {
     // For now, return a default SMTP cost estimate
     // In a real implementation, you would query email campaigns separately

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { articleId: string } }
 ) {
   try {
@@ -266,7 +266,12 @@ Only include the most important entities (max 10 per result).`
   }
 
   // Deduplicate and score entities by frequency across SERP
-  const entityFrequency = {}
+  const entityFrequency: Record<string, {
+    entity: string;
+    entityType: string;
+    frequency: number;
+    totalRelevance: number;
+  }> = {}
   allSerpEntities.forEach((entity: any) => {
     if (!entityFrequency[entity.entity]) {
       entityFrequency[entity.entity] = {
@@ -290,7 +295,7 @@ Only include the most important entities (max 10 per result).`
     .slice(0, 20) // Top 20 entities from SERP
 }
 
-async function calculateEntityCoverage(ourEntities: any[], serpEntities: any[], zai: any) {
+async function calculateEntityCoverage(ourEntities: any[], serpEntities: any[], _zai: any) {
   const coverage: any[] = []
 
   // Create a map of SERP entities for quick lookup

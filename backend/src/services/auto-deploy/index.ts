@@ -130,6 +130,11 @@ export class AutoDeployService {
       Respond with only "true" or "false".
       `;
 
+        if (!this.zai) {
+        console.warn('Z.ai SDK not initialized, defaulting to safe deployment decision');
+        return false;
+      }
+
       const completion = await this.zai.chat.completions.create({
         messages: [
           {
@@ -173,6 +178,11 @@ export class AutoDeployService {
       Create a 1-2 sentence summary suitable for deployment logs and team notifications.
       Focus on the impact and value of these changes.
       `;
+
+        if (!this.zai) {
+        console.warn('Z.ai SDK not initialized, using default deployment summary');
+        return "Automated deployment with latest changes";
+      }
 
       const completion = await this.zai.chat.completions.create({
         messages: [

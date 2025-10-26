@@ -316,7 +316,7 @@ Please return the enhanced version of the content while maintaining the original
       data: {
         id: article.id,
         title: article.title,
-        slug: article.slug,
+        slug: article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         content: article.content,
         excerpt: article.excerpt,
         keywords: JSON.stringify(request.keywords),

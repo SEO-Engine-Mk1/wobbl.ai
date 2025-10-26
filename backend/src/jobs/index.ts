@@ -125,7 +125,7 @@ const wordpressPublishWorker = new Worker(
       };
 
       let result;
-      if (status === 'scheduled' && scheduledAt) {
+      if (scheduledAt) {
         result = await wpService.schedulePost(wpPost, scheduledAt);
       } else {
         result = await wpService.publishPost(wpPost);

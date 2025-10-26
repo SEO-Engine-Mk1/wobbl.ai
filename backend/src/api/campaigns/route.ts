@@ -247,7 +247,7 @@ Respond in JSON format:
 async function generateEmailSteps({
   companyProfile,
   newsContent,
-  campaignSettings,
+  campaignSettings: _campaignSettings,
   zai
 }: any) {
   const prompt = `Generate a 3-step email campaign for ${companyProfile.companyName}.
@@ -354,7 +354,7 @@ async function queueRecipients(campaignId: string, recipientList: any[]) {
 }
 
 // SMTP configuration for Hostinger
-function createSMTPTransporter() {
+function _createSMTPTransporter() {
   return nodemailer.createTransport({
     host: env.SMTP_HOST || 'smtp.hostinger.com',
     port: parseInt(env.SMTP_PORT || '465'),
@@ -370,7 +370,7 @@ function createSMTPTransporter() {
 }
 
 // Calculate daily sending limit based on warmup schedule
-function calculateDailyLimit(warmupDay: number, maxDaily: number): number {
+function _calculateDailyLimit(warmupDay: number, maxDaily: number): number {
   const warmupSchedule = [
     50,   // Day 1
     100,  // Day 2

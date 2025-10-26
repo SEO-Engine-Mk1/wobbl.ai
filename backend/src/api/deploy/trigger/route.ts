@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import ZAI from 'z-ai-web-dev-sdk';
+// TODO: type properly - ZAI import currently unused
+// import ZAI from 'z-ai-web-dev-sdk';
 
 interface DeployPayload {
   trigger?: string;

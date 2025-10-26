@@ -303,7 +303,11 @@ export class SocialMediaService {
           // Update status to failed
           await prisma.scheduledPost.update({
             where: { id: scheduledPost.id },
-            data: { status: 'failed', error: error instanceof Error ? error.message : 'Unknown error' }
+            data: { 
+              status: 'failed',
+              // Note: error field doesn't exist in schema, removing this line
+              // error: error instanceof Error ? error.message : 'Unknown error' 
+            }
           });
         }
       }
@@ -342,17 +346,17 @@ export class SocialMediaService {
     }
   }
 
-  private async saveSocialPost(response: SocialMediaResponse, post: SocialPost): Promise<void> {
+  private async saveSocialPost(response: SocialMediaResponse, _post: SocialPost): Promise<void> {
     await prisma.socialPost.create({
       data: {
         platform: response.platform,
         postId: response.postId,
         url: response.url,
         status: response.status,
-        content: post.content,
-        imageUrl: post.imageUrl,
-        link: post.link,
-        hashtags: post.hashtags || [],
+        content: _post.content,
+        imageUrl: _post.imageUrl,
+        link: _post.link,
+        hashtags: _post.hashtags || [],
         publishedAt: new Date(),
         createdAt: new Date(),
       }

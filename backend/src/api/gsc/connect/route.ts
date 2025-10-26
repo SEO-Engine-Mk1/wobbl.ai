@@ -200,7 +200,7 @@ function encryptToken(token: string): string {
   return token
 }
 
-function decryptToken(encryptedToken: string): string {
+function _decryptToken(encryptedToken: string): string {
   // In production, use proper decryption
   // For now, return as-is (should implement proper decryption)
   return encryptedToken

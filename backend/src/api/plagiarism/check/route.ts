@@ -109,7 +109,7 @@ Respond with only a number between 0 and 1 representing the similarity score (0 
   }
 }
 
-async function performExternalPlagiarismCheck(article: any) {
+async function performExternalPlagiarismCheck(_article: any) {
   // Simulate external API call to Copyscape or Originality.AI
   // In production, this would integrate with actual plagiarism detection services
   

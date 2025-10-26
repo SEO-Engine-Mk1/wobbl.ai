@@ -316,7 +316,7 @@ async function updateArticlePerformance(articleId: string, gscData: any) {
   })
 }
 
-async function analyzePerformanceData(propertyId: string) {
+async function analyzePerformanceData(_propertyId: string) {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 

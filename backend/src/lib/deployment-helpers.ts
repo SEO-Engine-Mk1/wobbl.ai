@@ -61,7 +61,7 @@ export async function checkServiceHealth() {
     await prisma.$queryRaw`SELECT 1`;
     health.database = 'healthy';
   } catch (error) {
-    health.database = (await prisma) === mockDatabase ? 'mock' : 'unhealthy';
+    health.database = prisma === mockDatabase ? 'mock' : 'unhealthy';
   }
 
   // Check Supabase
@@ -88,8 +88,12 @@ export async function checkServiceHealth() {
   // Check ZAI
   try {
     const ZAIImport = await zai;
-    const zaiService = await ZAIImport.create();
-    health.zai = zaiService !== mockZAI ? 'healthy' : 'mock';
+    if (typeof ZAIImport.create === 'function') {
+      const zaiService = await ZAIImport.create();
+      health.zai = zaiService !== mockZAI ? 'healthy' : 'mock';
+    } else {
+      health.zai = 'unhealthy';
+    }
   } catch (error) {
     health.zai = 'unhealthy';
   }

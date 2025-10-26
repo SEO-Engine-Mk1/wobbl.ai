@@ -147,7 +147,7 @@ Respond in JSON format:
   }
 }
 
-async function searchAndVerifyClaim(claim: any, serpAnalysis: any, zai: any) {
+async function searchAndVerifyClaim(claim: any, _serpAnalysis: any, zai: any) {
   // Search for claim verification
   const searchQuery = `"${claim.claimText}" fact check OR statistics OR research`
   

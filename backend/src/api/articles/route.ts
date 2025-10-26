@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function analyzeSerpResults(searchResults: any[], zai: any) {
-  const uniqueDomains = new Set(searchResults.map(r => new URL(r.url).hostname)).size
+  // Note: uniqueDomains calculation kept for potential future use
+  // const uniqueDomains = new Set(searchResults.map(r => new URL(r.url).hostname)).size
   
   const prompt = `Analyze these SERP results and extract insights for content creation:
 

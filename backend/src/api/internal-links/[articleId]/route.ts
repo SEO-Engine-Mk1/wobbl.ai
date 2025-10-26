@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { articleId: string } }
 ) {
   try {

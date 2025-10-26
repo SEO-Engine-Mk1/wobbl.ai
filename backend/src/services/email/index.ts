@@ -139,6 +139,7 @@ export class EmailService {
     const newCampaign = await prisma.emailCampaign.create({
       data: {
         ...campaign,
+        listIds: Array.isArray(campaign.listIds) ? JSON.stringify(campaign.listIds) : campaign.listIds,
         id: crypto.randomUUID(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -150,7 +151,7 @@ export class EmailService {
       name: newCampaign.name,
       description: newCampaign.description,
       templateId: newCampaign.templateId,
-      listIds: JSON.stringify(newCampaign.listIds),
+      listIds: JSON.parse(newCampaign.listIds),
       scheduleType: newCampaign.scheduleType as any,
       scheduledAt: newCampaign.scheduledAt || undefined,
       recurringConfig: newCampaign.recurringConfig as any,
@@ -173,7 +174,8 @@ export class EmailService {
     }
 
     // Get all subscribers from the campaign's lists
-    const subscribers = await this.getCampaignSubscribers(campaign.listIds as string[]);
+    const listIds = Array.isArray(campaign.listIds) ? campaign.listIds : JSON.parse(campaign.listIds || '[]');
+    const subscribers = await this.getCampaignSubscribers(listIds);
     
     const results: EmailSendResult[] = [];
 
@@ -371,7 +373,7 @@ export class EmailService {
       email: subscriber.email,
       firstName: subscriber.firstName || undefined,
       lastName: subscriber.lastName || undefined,
-      customFields: subscriber.customFields as Record<string, any> || undefined,
+      customFields: (subscriber.customFields && typeof subscriber.customFields === 'object') ? subscriber.customFields as Record<string, any> : undefined,
       status: subscriber.status as any,
       subscribedAt: subscriber.subscribedAt,
       unsubscribedAt: subscriber.unsubscribedAt || undefined,
@@ -443,6 +445,7 @@ export class EmailService {
       status: campaign.status as any,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
+      userId: campaign.userId,
     }));
   }
 
@@ -533,6 +536,7 @@ export class EmailService {
       status: campaign.status as any,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
+      userId: campaign.userId,
     }));
   }
 }

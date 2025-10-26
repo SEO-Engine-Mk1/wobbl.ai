@@ -181,7 +181,9 @@ export class WordPressService {
   async uploadMedia(imageBuffer: Buffer, filename: string, mimeType: string): Promise<number> {
     try {
       const formData = new FormData();
-      formData.append('file', new Blob([imageBuffer], { type: mimeType }), filename);
+      // Convert Buffer to Uint8Array for Blob compatibility
+      const uint8Array = new Uint8Array(imageBuffer);
+      formData.append('file', new Blob([uint8Array], { type: mimeType }), filename);
 
       const response = await axios.post(
         `${this.config.url}/wp-json/wp/v2/media`,
