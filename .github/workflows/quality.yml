@@ -303,12 +303,12 @@ jobs:
         run: pnpm audit --audit-level=medium
 
       - name: Check for secrets
-        if: ${{ github.event.before != github.event.after }}
+        if: ${{ github.event_name == 'push' && github.event.before != github.event.after }}
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: wobbl.ai
-          head: HEAD
+          base: ${{ github.event.before }}
+          head: ${{ github.event.after }}
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
