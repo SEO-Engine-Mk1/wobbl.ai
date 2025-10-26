@@ -247,7 +247,7 @@ class RedisIntegration {
 
   async zrange<T = any>(key: string, start: number, stop: number, options?: { rev?: boolean }): Promise<T[]> {
     const args = options?.rev ? ['REV'] : [];
-    const members = await this.client.zrange(key, start, stop, ...args);
+    const members = await this.client.zrange(key, start, stop, ...args) as string[];
     return members.map((m: string) => {
       try {
         return JSON.parse(m);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function GET(
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     // Get article with SERP analysis
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         serpAnalysis: true,
@@ -67,7 +67,7 @@ export async function POST(
 
     if (action === 'reanalyze') {
       // Reanalyze gaps
-      const article = await db.article.findUnique({
+      const article = await prisma.article.findUnique({
         where: { id: articleId },
         include: { serpAnalysis: true }
       })
@@ -77,7 +77,7 @@ export async function POST(
       }
 
       // Delete existing gaps
-      await db.competitorGap.deleteMany({
+      await prisma.competitorGap.deleteMany({
         where: { articleId }
       })
 
@@ -122,8 +122,8 @@ async function analyzeCompetitorGaps(article: any) {
 
     // Step 4: Store gaps in database
     const storedGaps = await Promise.all(
-      gaps.map(gap =>
-        db.competitorGap.create({
+      gaps.map((gap: any) =>
+        prisma.competitorGap.create({
           data: {
             articleId: article.id,
             entity: gap.entity,

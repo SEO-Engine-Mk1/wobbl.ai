@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get article with claims and SERP analysis
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         claims: true,
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Step 2: Update claims with verification results
     await Promise.all(
       verifiedClaims.map(verifiedClaim =>
-        db.claim.update({
+        prisma.claim.update({
           where: { id: verifiedClaim.id },
           data: {
             verified: verifiedClaim.verified,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const allClaimsVerified = totalClaims === 0 || verifiedClaimsCount === totalClaims
 
     // Step 4: Update article verification status
-    await db.article.update({
+    await prisma.article.update({
       where: { id: articleId },
       data: {
         claimsVerified: allClaimsVerified,

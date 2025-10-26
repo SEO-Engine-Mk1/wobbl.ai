@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get article with SERP analysis
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         serpAnalysis: true,
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       : []
 
     // Update article with plagiarism check results
-    await db.article.update({
+    await prisma.article.update({
       where: { id: articleId },
       data: {
         originalityScore: overallScore,

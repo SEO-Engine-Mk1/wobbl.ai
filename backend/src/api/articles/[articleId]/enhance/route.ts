@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 
 export async function POST(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function POST(
     }
 
     // Get article
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         serpAnalysis: true,
@@ -91,9 +91,9 @@ export async function POST(
         results.push({
           feature: 'entity-coverage',
           status: 'completed',
-          score: article.entityCoverage.reduce((sum, entity) => sum + (entity.coverageScore || 0), 0) / article.entityCoverage.length,
+          score: article.entityCoverage.reduce((sum: number, entity: any) => sum + (entity.coverageScore || 0), 0) / article.entityCoverage.length,
           count: article.entityCoverage.length,
-          message: `Entity coverage analyzed (${(article.entityCoverage.reduce((sum, entity) => sum + (entity.coverageScore || 0), 0) / article.entityCoverage.length)?.toFixed(1)}%)`
+          message: `Entity coverage analyzed (${(article.entityCoverage.reduce((sum: number, entity: any) => sum + (entity.coverageScore || 0), 0) / article.entityCoverage.length)?.toFixed(1)}%)`
         })
       }
     }

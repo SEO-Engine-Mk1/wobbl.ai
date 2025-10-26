@@ -23,9 +23,10 @@ export interface EmailTemplate {
 
 export interface EmailCampaign {
   id: string;
+  userId: string;
   name: string;
   description: string;
-  templateId: string;
+  templateId: string | null;
   listIds: string[];
   scheduleType: 'immediate' | 'scheduled' | 'recurring';
   scheduledAt?: Date;
@@ -98,6 +99,7 @@ export class EmailService {
     const newTemplate = await prisma.emailTemplate.create({
       data: {
         ...template,
+        variables: JSON.stringify(template.variables),
         id: crypto.randomUUID(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -110,7 +112,7 @@ export class EmailService {
       subject: newTemplate.subject,
       htmlContent: newTemplate.htmlContent,
       textContent: newTemplate.textContent,
-      variables: newTemplate.variables as string[],
+      variables: JSON.parse(newTemplate.variables || '[]'),
       category: newTemplate.category as any,
     };
   }
@@ -128,7 +130,7 @@ export class EmailService {
       subject: template.subject,
       htmlContent: template.htmlContent,
       textContent: template.textContent,
-      variables: template.variables as string[],
+      variables: JSON.parse(template.variables || '[]'),
       category: template.category as any,
     }));
   }
@@ -148,7 +150,7 @@ export class EmailService {
       name: newCampaign.name,
       description: newCampaign.description,
       templateId: newCampaign.templateId,
-      listIds: newCampaign.listIds as string[],
+      listIds: JSON.stringify(newCampaign.listIds),
       scheduleType: newCampaign.scheduleType as any,
       scheduledAt: newCampaign.scheduledAt || undefined,
       recurringConfig: newCampaign.recurringConfig as any,
@@ -179,9 +181,9 @@ export class EmailService {
       try {
         const result = await this.sendEmail(
           subscriber.email,
-          campaign.template.subject,
-          campaign.template.htmlContent,
-          campaign.template.textContent,
+          campaign.template?.subject || '',
+          campaign.template?.htmlContent || '',
+          campaign.template?.textContent || '',
           this.subscriberToVariables(subscriber)
         );
 
@@ -319,6 +321,7 @@ export class EmailService {
           id: crypto.randomUUID(),
           status: 'active',
           subscribedAt: new Date(),
+          customFields: JSON.stringify(subscriber.customFields || {}),
         }
       });
       subscriberId = newSubscriber.id;
@@ -342,7 +345,7 @@ export class EmailService {
       email: subscriberData!.email,
       firstName: subscriberData!.firstName || undefined,
       lastName: subscriberData!.lastName || undefined,
-      customFields: subscriberData!.customFields as Record<string, any> || undefined,
+      customFields: JSON.parse(subscriberData!.customFields || '{}'),
       status: subscriberData!.status as any,
       subscribedAt: subscriberData!.subscribedAt,
       unsubscribedAt: subscriberData!.unsubscribedAt || undefined,
@@ -433,7 +436,7 @@ export class EmailService {
       name: campaign.name,
       description: campaign.description,
       templateId: campaign.templateId,
-      listIds: campaign.listIds as string[],
+      listIds: JSON.parse(campaign.listIds || '[]'),
       scheduleType: campaign.scheduleType as any,
       scheduledAt: campaign.scheduledAt || undefined,
       recurringConfig: campaign.recurringConfig as any,
@@ -504,7 +507,7 @@ export class EmailService {
         email: ls.subscriber.email,
         firstName: ls.subscriber.firstName || undefined,
         lastName: ls.subscriber.lastName || undefined,
-        customFields: ls.subscriber.customFields as Record<string, any> || undefined,
+        customFields: JSON.parse(ls.subscriber.customFields || '{}'),
         status: ls.subscriber.status as any,
         subscribedAt: ls.subscriber.subscribedAt,
         unsubscribedAt: ls.subscriber.unsubscribedAt || undefined,
@@ -523,7 +526,7 @@ export class EmailService {
       name: campaign.name,
       description: campaign.description,
       templateId: campaign.templateId,
-      listIds: campaign.listIds as string[],
+      listIds: JSON.parse(campaign.listIds || '[]'),
       scheduleType: campaign.scheduleType as any,
       scheduledAt: campaign.scheduledAt || undefined,
       recurringConfig: campaign.recurringConfig as any,

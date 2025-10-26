@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import { google } from 'googleapis'
 
 export async function POST(request: NextRequest) {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       lastSyncAt: Date | null;
     }> = []
     for (const site of verifiedSites) {
-      const property = await db.searchConsoleProperty.create({
+      const property = await prisma.searchConsoleProperty.create({
         data: {
           userId,
           siteUrl: site.siteUrl!,
@@ -144,7 +144,7 @@ async function triggerDataIngestion(propertyId: string, oauth2Client: any) {
 
     // Get analytics data for the property
     const analyticsResponse = await searchconsole.searchanalytics.query({
-      siteUrl: (await db.searchConsoleProperty.findUnique({ where: { id: propertyId } }))?.siteUrl,
+      siteUrl: (await prisma.searchConsoleProperty.findUnique({ where: { id: propertyId } }))?.siteUrl,
       auth: oauth2Client,
       requestBody: {
         startDate: startDate.toISOString().split('T')[0],
@@ -167,7 +167,7 @@ async function triggerDataIngestion(propertyId: string, oauth2Client: any) {
       const query = row.keys[1] || ''
       const date = new Date(row.keys[2] || '')
       
-      await db.gSCMetricSnapshot.create({
+      await prisma.gSCMetricSnapshot.create({
         data: {
           propertyId,
           page,
@@ -182,7 +182,7 @@ async function triggerDataIngestion(propertyId: string, oauth2Client: any) {
     }
 
     // Update property last sync time
-    await db.searchConsoleProperty.update({
+    await prisma.searchConsoleProperty.update({
       where: { id: propertyId },
       data: { lastSyncAt: new Date() }
     })

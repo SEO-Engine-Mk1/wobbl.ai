@@ -61,16 +61,16 @@ export async function checkServiceHealth() {
     await prisma.$queryRaw`SELECT 1`;
     health.database = 'healthy';
   } catch (error) {
-    health.database = db === mockDatabase ? 'mock' : 'unhealthy';
+    health.database = (await prisma) === mockDatabase ? 'mock' : 'unhealthy';
   }
 
   // Check Supabase
   try {
     const supabaseClient = await supabase;
-    await supabaseClient.from('_health').select('*').limit(1);
+    await (supabaseClient as any).from('_health').select('*').limit(1);
     health.supabase = 'healthy';
   } catch (error) {
-    health.supabase = supabase === mockSupabase ? 'mock' : 'unhealthy';
+    health.supabase = (await supabase) === mockSupabase ? 'mock' : 'unhealthy';
   }
 
   // Check Redis
@@ -82,13 +82,13 @@ export async function checkServiceHealth() {
     health.redis = result === 'ok' ? 'healthy' : 'unhealthy';
     await redisClient.disconnect();
   } catch (error) {
-    health.redis = redis === mockRedis ? 'mock' : 'unhealthy';
+    health.redis = (await redis) === mockRedis ? 'mock' : 'unhealthy';
   }
 
   // Check ZAI
   try {
-    const ZAI = await zai;
-    const zaiService = await ZAI.create();
+    const ZAIImport = await zai;
+    const zaiService = await ZAIImport.create();
     health.zai = zaiService !== mockZAI ? 'healthy' : 'mock';
   } catch (error) {
     health.zai = 'unhealthy';

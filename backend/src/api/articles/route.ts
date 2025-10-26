@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function POST(request: NextRequest) {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 4: Create article record
-    const article = await db.article.create({
+    const article = await prisma.article.create({
       data: {
         title: articleContent.title,
         slug: generateSlug(articleContent.title),
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 5: Store SERP analysis
-    await db.serpAnalysis.create({
+    await prisma.serpAnalysis.create({
       data: {
         articleId: article.id,
         query,
@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
     // Step 6: Extract and store claims
     const claims = await extractClaims(articleContent.content, zai)
     if (claims.length > 0) {
-      await db.claim.createMany({
-        data: claims.map(claim => ({
+      await prisma.claim.createMany({
+        data: claims.map((claim: any) => ({
           articleId: article.id,
           claimText: claim.text,
           claimType: claim.type,

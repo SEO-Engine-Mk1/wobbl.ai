@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if author already exists
-    const existingAuthor = await db.author.findUnique({
+    const existingAuthor = await prisma.author.findUnique({
       where: { name }
     })
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new author
-    const author = await db.author.create({
+    const author = await prisma.author.create({
       data: {
         name,
         bio,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     if (authorId) {
       // Get specific author by ID
-      const author = await db.author.findUnique({
+      const author = await prisma.author.findUnique({
         where: { id: authorId },
         include: {
           articles: {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     if (authorName) {
       // Get author by name
-      const author = await db.author.findUnique({
+      const author = await prisma.author.findUnique({
         where: { name: authorName }
       })
 
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all authors
-    const authors = await db.author.findMany({
+    const authors = await prisma.author.findMany({
       include: {
         _count: {
           select: {
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      authors: authors.map(author => ({
+      authors: authors.map((author: any) => ({
         ...author,
         topics: author.topics ? JSON.parse(author.topics) : [],
         articleCount: author._count.articles
@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update author
-    const author = await db.author.update({
+    const author = await prisma.author.update({
       where: { id },
       data: {
         ...(name && { name }),
@@ -221,7 +221,7 @@ async function calculateAuthorMetrics(author: any) {
   const totalCPCValue = totalClicks * 3.50
   
   // Update author with calculated metrics
-  await db.author.update({
+  await prisma.author.update({
     where: { id: author.id },
     data: {
       totalArticles: publishedArticles.length,

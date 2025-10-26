@@ -125,7 +125,7 @@ const wordpressPublishWorker = new Worker(
       };
 
       let result;
-      if (status === 'schedule' && scheduledAt) {
+      if (status === 'scheduled' && scheduledAt) {
         result = await wpService.schedulePost(wpPost, scheduledAt);
       } else {
         result = await wpService.publishPost(wpPost);
@@ -190,7 +190,9 @@ const emailCampaignWorker = new Worker(
 
       if (scheduleType === 'scheduled') {
         // Process scheduled campaigns
-        await emailService.processScheduledCampaigns();
+        const result = await emailService.processScheduledCampaigns();
+        await job.updateProgress(100);
+        return result;
       } else {
         // Send immediately
         const result = await emailService.sendCampaign(campaignId);

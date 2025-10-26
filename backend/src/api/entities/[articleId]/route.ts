@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function GET(
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     // Get article with SERP analysis and entity coverage
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         serpAnalysis: true,
@@ -77,7 +77,7 @@ export async function POST(
 
     if (action === 'reanalyze') {
       // Reanalyze entity coverage
-      const article = await db.article.findUnique({
+      const article = await prisma.article.findUnique({
         where: { id: articleId },
         include: { serpAnalysis: true }
       })
@@ -87,7 +87,7 @@ export async function POST(
       }
 
       // Delete existing entity coverage
-      await db.entityCoverage.deleteMany({
+      await prisma.entityCoverage.deleteMany({
         where: { articleId }
       })
 
@@ -130,7 +130,7 @@ async function analyzeEntityCoverage(article: any) {
     // Step 4: Store entity coverage in database
     const storedEntities = await Promise.all(
       entityCoverage.map(entity =>
-        db.entityCoverage.create({
+        prisma.entityCoverage.create({
           data: {
             articleId: article.id,
             entity: entity.entity,
@@ -153,7 +153,7 @@ async function analyzeEntityCoverage(article: any) {
       : 0
 
     // Step 6: Update article with entity coverage score
-    await db.article.update({
+    await prisma.article.update({
       where: { id: article.id },
       data: {
         entityCoverageScore: overallScore,

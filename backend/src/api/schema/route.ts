@@ -141,7 +141,7 @@ async function generateEnhancedSchema(article: any, schemaTypes: string[], zai: 
   if (article.faqSection && Array.isArray(article.faqSection)) {
     enhancedSchema.faqPage = {
       '@type': 'FAQPage',
-      mainEntity: article.faqSection.map(faq => ({
+      mainEntity: article.faqSection.map((faq: any) => ({
         '@type': 'Question',
         name: faq.question,
         acceptedAnswer: {
@@ -156,7 +156,7 @@ async function generateEnhancedSchema(article: any, schemaTypes: string[], zai: 
   if (article.tableOfContents && Array.isArray(article.tableOfContents)) {
     enhancedSchema.breadcrumbList = {
       '@type': 'BreadcrumbList',
-      itemListElement: article.tableOfContents.map((toc, index) => ({
+      itemListElement: article.tableOfContents.map((toc: any, index: number) => ({
         '@type': 'ListItem',
         position: index + 1,
         name: toc.title,

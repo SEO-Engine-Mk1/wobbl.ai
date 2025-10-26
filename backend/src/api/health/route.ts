@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma as db } from '../../../lib/db';
+import { prisma } from '../../../lib/db';
 
 export async function GET() {
   try {
     // Test database connection
-    await db.user.count();
+    await prisma.user.count();
     
     // Check environment variables
     const requiredEnvVars = [

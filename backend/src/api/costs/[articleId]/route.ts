@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -13,7 +13,7 @@ export async function GET(
     }
 
     // Get article with cost and performance data
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         cost: true,
@@ -33,7 +33,7 @@ export async function GET(
     if (!costData) {
       const calculatedCosts = await calculateArticleCosts(article)
       // Create cost record if it doesn't exist
-      costData = await db.articleCost.create({
+      costData = await prisma.articleCost.create({
         data: {
           articleId,
           ...calculatedCosts
@@ -74,7 +74,7 @@ export async function POST(
 
     if (action === 'recalculate') {
       // Recalculate costs
-      const article = await db.article.findUnique({
+      const article = await prisma.article.findUnique({
         where: { id: articleId },
         include: {
           cost: true,
@@ -93,7 +93,7 @@ export async function POST(
       const newCostData = await calculateArticleCosts(article)
 
       // Update or create cost record
-      const costRecord = await db.articleCost.upsert({
+      const costRecord = await prisma.articleCost.upsert({
         where: { articleId },
         update: newCostData,
         create: {
@@ -190,8 +190,8 @@ async function calculateROIMetrics(article: any, costData: any) {
     const recentPerformance = performance.slice(0, 7) // Last 7 days
     const initialPerformance = performance.slice(-7) // First 7 days
     
-    const recentClicks = recentPerformance.reduce((sum, p) => sum + p.clicks, 0)
-    const initialClicks = initialPerformance.reduce((sum, p) => sum + p.clicks, 0)
+    const recentClicks = recentPerformance.reduce((sum: number, p: any) => sum + p.clicks, 0)
+    const initialClicks = initialPerformance.reduce((sum: number, p: any) => sum + p.clicks, 0)
     
     clicksGained = Math.max(0, recentClicks - initialClicks)
     

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Create email steps
     await Promise.all(
-      emailSteps.map((step, index) =>
+      emailSteps.map((step: any, index: number) =>
         prisma.emailStep.create({
           data: {
             campaignId: campaign.id,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         emailStepsCount: emailSteps.length
       },
       recipientsQueued: queuedRecipients.length,
-      emailSteps: emailSteps.map((step, index) => ({
+      emailSteps: emailSteps.map((step: any, index: number) => ({
         stepNumber: index + 1,
         subject: step.subject,
         delayDays: step.delayDays,
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      campaigns: campaigns.map(campaign => ({
+      campaigns: campaigns.map((campaign: any) => ({
         id: campaign.id,
         name: campaign.name,
         status: campaign.status,

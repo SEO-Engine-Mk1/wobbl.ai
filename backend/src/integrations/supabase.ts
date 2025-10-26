@@ -100,7 +100,7 @@ class SupabaseIntegration {
 
   // Database Operations
   async getTable<T = any>(tableName: string): Promise<SupabaseTable<T>> {
-    const table = this.client.from(tableName);
+    const table = (this.client.from(tableName) as any);
     
     return {
       select: async (columns?: string) => {

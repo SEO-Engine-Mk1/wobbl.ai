@@ -552,7 +552,7 @@ ${outline.gapAnalysis.uniqueAngles.map(angle => `- ${angle}`).join('\n')}
     }
 
     // Check keyword inclusion
-    const missingKeywords = outlineSection.keywords.filter(keyword => 
+    const missingKeywords = outlineSection.keywords.filter((keyword: any) => 
       !content.toLowerCase().includes(keyword.toLowerCase())
     );
     if (missingKeywords.length > 0) {
@@ -989,8 +989,8 @@ ${outline.gapAnalysis.uniqueAngles.map(angle => `- ${angle}`).join('\n')}
     
     // In production, this would query the database for relevant internal content
     const potentialLinks = [
-      { url: '/blog/related-topic-1', anchorText: 'related topic', relevance: 0.8 },
-      { url: '/blog/related-topic-2', anchorText: 'another guide', relevance: 0.7 },
+      { url: '/blog/related-topic-1', anchorText: 'related topic', relevanceScore: 0.8 },
+      { url: '/blog/related-topic-2', anchorText: 'another guide', relevanceScore: 0.7 },
     ];
     
     potentialLinks.forEach(link => {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma as db } from '../../../lib/db'
+import { prisma } from '../../../lib/db'
 
 export async function POST(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function POST(
     }
 
     // Update auto-refresh setting
-    const updatedArticle = await db.article.update({
+    const updatedArticle = await prisma.article.update({
       where: { id: articleId },
       data: {
         autoRefreshEnabled: enabled
@@ -48,7 +48,7 @@ export async function GET(
     }
 
     // Get article with performance data
-    const article = await db.article.findUnique({
+    const article = await prisma.article.findUnique({
       where: { id: articleId },
       include: {
         performanceMetrics: {
