@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
+import { prisma } from '@/lib/db'
 import ZAI from 'z-ai-web-dev-sdk'
 
 export async function POST(request: NextRequest) {

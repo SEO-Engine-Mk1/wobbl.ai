@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/db'
-import { env } from '../../../lib/env'
+import { prisma } from '@/lib/db'
+import { env } from '@/lib/env'
 import nodemailer from 'nodemailer'
 import ZAI from 'z-ai-web-dev-sdk'
 

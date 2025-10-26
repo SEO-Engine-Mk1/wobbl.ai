@@ -1,0 +1,14 @@
+fix(trufflehog): correct conditional execution and commit SHA references
+
+Fix critical issues in TruffleHog configuration:
+- Add proper event trigger check (github.event_name == 'push')
+- Use actual commit SHAs instead of hardcoded values
+- Ensure conditional is at correct step level
+- Apply fixes to all workflow files (ci.yml, code-quality.yml, quality.yml)
+
+This prevents "BASE and HEAD commits are the same" errors and ensures
+TruffleHog only runs on actual push events with real commits to scan.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
